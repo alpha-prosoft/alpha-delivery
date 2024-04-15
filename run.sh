@@ -135,7 +135,7 @@ INSTANCE_ID=$(aws ec2 run-instances \
     --query 'Instances[0].InstanceId' \
     --metadata-options "HttpTokens=required,HttpEndpoint=enabled,HttpPutResponseHopLimit=5" \
     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$TAG}]" \
-    --block-device-mappings "[{\"DeviceName\":\"/dev/xvda\",\"Ebs\":{\"VolumeSize\":100}}]" \
+    --block-device-mappings "[{\"DeviceName\":\"/dev/xvda\",\"Ebs\":{\"Encrypted\":true,\"VolumeSize\":100}}]" \
     --output text)
 
 echo "Instance created with ID: $INSTANCE_ID"
