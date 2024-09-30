@@ -101,7 +101,7 @@ fi
 
 TAG="DeliveryBuilder"
 
-echo "Terminating old instances"
+echo "Terminating old instances with tag; ${TAG}"
 INSTANCE_IDS=$(aws ec2 describe-instances \
     --filters "Name=tag:Name,Values=${TAG}" "Name=instance-state-name,Values=running" \
     --query 'Reservations[*].Instances[*].InstanceId' \
