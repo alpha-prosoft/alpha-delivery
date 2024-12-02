@@ -10,6 +10,12 @@ ROLE_NAME="DeliveryRole"
 
 echo "Ensure desired role: $ROLE_NAME"
 
+echo "{}" > /tmp/config.json
+aws ssm get-parameter \
+       --name "/install/config" \
+       --with-decryption \
+       --query 'Parameter.Value' \
+       --output text > /tmp/config.json || echo "No config"
 
 if aws iam get-role --role-name $ROLE_NAME &> /dev/null; then
     echo "Role $ROLE_NAME already exists. Skipping creation."
@@ -44,8 +50,10 @@ POLICY_ARN="arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 echo "Attaching SSM policy to $ROLE_NAME..."
 aws iam attach-role-policy --role-name $ROLE_NAME --policy-arn $POLICY_ARN
 
-
-
+for policy in $(cat /tmp/config.json | jq -r '.builder.role.additionalPolicies | join(" ")'); do 
+  echo "Adding $policy"
+  aws iam attach-role-policy --role-name $ROLE_NAME --policy-arn $policy
+done
 
 if aws iam get-instance-profile --instance-profile-name $ROLE_NAME &> /dev/null; then
     echo "Instance profile $ROLE_NAME already exists."
@@ -57,6 +65,8 @@ else
     # Add the role to the instance profile
     echo "Adding role $ROLE_NAME to instance profile..."
     aws iam add-role-to-instance-profile --instance-profile-name $ROLE_NAME --role-name $ROLE_NAME
+    echo "Sleeping 15 seconds becaue otherwise AWS reports invalid instance profile :S)"
+    sleep 15
 fi
 
 INSTANCE_PROFILE_ARN=$(aws iam get-instance-profile \
@@ -65,9 +75,6 @@ INSTANCE_PROFILE_ARN=$(aws iam get-instance-profile \
     --output text)
 
 echo "Using instance profile ${INSTANCE_PROFILE_ARN}"
-
-echo "Sleeping 15 seconds becaue otherwise AWS reports invalid instance profile :S)
-sleep 15
 
 SECURITY_GROUP_NAME="DeliverySecurityGroup"
 echo "Creating security group: $SECURITY_GROUP_NAME"
@@ -95,7 +102,7 @@ if [ -z "$SECURITY_GROUP_ID" ]; then
         --vpc-id $VPC_ID \
         --group-name $SECURITY_GROUP_NAME \
         --description "Delivery security group" \
-	--output text
+        --output text
 else 
     echo "Group already exists ${SECURITY_GROUP_ID}"
 fi 
@@ -123,11 +130,29 @@ SUBNET_ID=$(aws ec2 describe-subnets \
   --query 'Subnets[0].SubnetId' \
   --output text)
 
+ami_filter="al2023-ami-2023*"
+if [[ ! -z "$(cat /tmp/config.json | jq -r '.builder.amiFilter // empty')" ]]; then 
+   ami_filter="$(cat /tmp/config.json | jq -r '.builder.amiFilter')"
+fi
+
+echo "Get the latest x86_64 $ami_filter"
+latest_ami_id=$(aws ec2 describe-images \
+  --filters "Name=name,Values=${ami_filter}" "Name=architecture,Values=x86_64" \
+  --query 'sort_by(Images, &CreationDate)[-1].ImageId' \
+  --output text)
+
+echo "Check if an AMI was found"
+if [ -n "$latest_ami_id" ]; then
+  echo "Latest x86_64 AMI ID for '$ami_filter': $latest_ami_id"
+else
+  echo "No x86_64 AMI found with name '$ami_filter'"
+  exit 1
+fi
+
 
 echo "Creating EC2 instance in subnet $SUBNET_ID ..."
-
 INSTANCE_ID=$(aws ec2 run-instances \
-    --image-id resolve:ssm:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2 \
+    --image-id $latest_ami_id \
     --count 1 \
     --instance-type t3.small \
     --security-group-ids $SECURITY_GROUP_ID \
@@ -153,8 +178,8 @@ install () {
   COMMAND_ID=$(aws ssm send-command \
     --instance-ids "${INSTANCE_ID}" \
     --document-name "AWS-RunShellScript" \
-    --comment "${COMMAND}" \
-    --parameters '{"commands":["#!/usr/bin/bash","'"${COMMAND}"'"]}' \
+    --comment "${COMMAND:0:99}" \
+    --parameters '{"commands":["if [[ -f /etc/bash_init ]]; then source /etc/bash_init; fi", "'"${COMMAND}"'"]}' \
     --output text \
     --query "Command.CommandId")
 
@@ -173,6 +198,9 @@ install () {
     --instance-id "$INSTANCE_ID" | jq -r '.StandardOutputContent'
 }
 
+
+install $INSTANCE_ID "update-ca-trust extract"
+
 install $INSTANCE_ID "yum install -y git"
 install $INSTANCE_ID "yum install -y jq"
 install $INSTANCE_ID "yum install -y docker"
@@ -184,8 +212,45 @@ install $INSTANCE_ID 'passwd --delete ssm-user;'
 install $INSTANCE_ID 'echo \"ssm-user ALL=(ALL) NOPASSWD:ALL\" | tee -a /etc/sudoers.d/ssm-agent-users;'
 install $INSTANCE_ID "usermod -aG docker ssm-user"
 
+echo "Loading custom certificates"
+parameter_names=$(aws ssm get-parameters-by-path \
+                     --path '/install/certificates/' \
+                     --recursive \
+                     --query 'Parameters[*].[Name]' \
+                     --output text | xargs -I {} basename {})
+for parameter_name in $parameter_names; do \
+   echo "Processing ${parameter_name}"; \
+   out=; \
+   cert=$(aws ssm get-parameter \
+     --name /install/certificates/${parameter_name} \
+     --with-decryption \
+     --query 'Parameter.Value' \
+     --output text | base64 -w0); \
+   install $INSTANCE_ID "echo $cert | base64 -d > /etc/pki/ca-trust/source/anchors/${parameter_name}"
+done
+install $INSTANCE_ID "update-ca-trust extract"
 
-install $INSTANCE_ID "git clone https://github.com/alpha-prosoft/alpha-${INSTALATION_TYPE}-svc.git /tmp/jenkins"
+echo "Configure environment"
+echo "{}" > /tmp/environment.json
+aws ssm get-parameter \
+       --name "/install/config" \
+       --with-decryption \
+       --query 'Parameter.Value' \
+       --output text > /tmp/environment.json || echo "No config"
+for environment in $(cat /tmp/environment.json | jq -r '.builder.environment | join(" ")'); do 
+  echo "Adding environment:"
+  install $INSTANCE_ID "echo $environment >> /etc/environment"
+  env_export="export $environment"
+  install $INSTANCE_ID "echo $env_export >> /etc/bash_init"
+done
+install $INSTANCE_ID "echo source /etc/bash_init >> /etc/bashrc"
+echo "Done config environment"
 
+echo "Cloning installation repo"
+install $INSTANCE_ID "git clone https://github.com/alpha-prosoft/alpha-${INSTALATION_TYPE}-svc.git /tmp/${INSTALATION_TYPE}"
 
-echo "Done"
+echo "Done Done"
+echo "####################################"
+echo "Now you can connect with session manager to instance $INSTANCE_ID,"
+echo "go to /tmp/${INSTALATION_TYPE} and run ./build-and-deploy.sh"
+echo "########### THANK YOU ##############"
