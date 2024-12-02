@@ -66,6 +66,9 @@ INSTANCE_PROFILE_ARN=$(aws iam get-instance-profile \
 
 echo "Using instance profile ${INSTANCE_PROFILE_ARN}"
 
+echo "Sleeping 15 seconds becaue otherwise AWS reports invalid instance profile :S)
+sleep 15
+
 SECURITY_GROUP_NAME="DeliverySecurityGroup"
 echo "Creating security group: $SECURITY_GROUP_NAME"
 
@@ -97,8 +100,6 @@ else
     echo "Group already exists ${SECURITY_GROUP_ID}"
 fi 
 
-
-
 TAG="DeliveryBuilder"
 
 echo "Terminating old instances with tag; ${TAG}"
@@ -118,6 +119,7 @@ fi
 
 SUBNET_ID=$(aws ec2 describe-subnets \
   --filters "Name=vpc-id,Values=${VPC_ID}" \
+  --filters "Name=tag:Name,Values=*PrivateSubnet*,*Internal*" \
   --query 'Subnets[0].SubnetId' \
   --output text)
 
