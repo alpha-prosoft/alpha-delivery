@@ -151,6 +151,10 @@ fi
 
 
 echo "Creating EC2 instance in subnet $SUBNET_ID ..."
+public_ip="--associate-public-ip-address"
+if [[ "$(cat /tmp/config.json | jq -r '.builder."associate-public-ip-address" // empty')" == "False" ]]; then 
+   public_ip=""
+fi
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id $latest_ami_id \
     --count 1 \
@@ -158,7 +162,7 @@ INSTANCE_ID=$(aws ec2 run-instances \
     --security-group-ids $SECURITY_GROUP_ID \
     --iam-instance-profile "Arn=$INSTANCE_PROFILE_ARN" \
     --subnet-id $SUBNET_ID \
-    --associate-public-ip-address \
+    ${public_ip} \
     --query 'Instances[0].InstanceId' \
     --metadata-options "HttpTokens=required,HttpEndpoint=enabled,HttpPutResponseHopLimit=5" \
     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$TAG}]" \

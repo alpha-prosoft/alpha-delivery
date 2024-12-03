@@ -14,8 +14,9 @@ You can add additional policies to EC2 role
 {
    "builder":{
       "role":{
-         "additionalPolicies":[
-            ...
+         "additionalPolicies": [
+            "<< Policy ARN1 >>",
+            "<< Policy ARN2 >>"
          ]
       }
    }
@@ -42,6 +43,17 @@ You can configure environment as well (i.e proxy). It will be added to /etc/envi
    }
 }
 ```
+
+Disable public Ip address assgnment:
+```json
+{
+   "builder":{
+      "associate-public-ip-address": "False"
+   }
+}
+```
+
+
 ## How to install jenkins
 
 ```
