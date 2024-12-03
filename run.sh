@@ -176,6 +176,11 @@ aws ec2 wait instance-running --instance-ids $INSTANCE_ID
 echo "Wait for instanc ok"
 aws ec2 wait instance-status-ok --instance-ids $INSTANCE_ID
 
+aws ec2 modify-instance-metadata-options \
+    --instance-id $INSTANCE_ID \
+    --http-put-response-hop-limit 3 \
+    --http-endpoint enabled
+
 install () {
   INSTANCE_ID="${1}"
   COMMAND="${2}"
