@@ -57,7 +57,7 @@ Disable public Ip address assgnment:
 Customize hosted zone name filter:
 ```json
 {
-   "builder":{
+   "deployer":{
       "hostedZoneFilter": "my-subdomain"
    }
 }
