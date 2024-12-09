@@ -63,6 +63,21 @@ Customize hosted zone name filter:
 }
 ```
 
+Becase deployent relies on naming comminf from AWS ControllTower you may need to override names 
+```
+{
+   "deployer":{
+      "paramsSubstitutions":{
+         "InternalA":"PrivateSubnet1A",
+         "InternalA":"PrivateSubnet1A",
+         "InternalA":"PrivateSubnet1A"
+      }
+   }
+}
+```
+
+
+
 ## How to install jenkins
 
 ```
