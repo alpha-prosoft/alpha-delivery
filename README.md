@@ -32,6 +32,7 @@ You can add custom amiFilter as well. It defaults to al2023
 }
 ```
 
+
 You can configure environment as well (i.e proxy). It will be added to /etc/environment as is:
 ```json
 {
@@ -53,6 +54,14 @@ Disable public Ip address assgnment:
 }
 ```
 
+Customize hosted zone name filter:
+```json
+{
+   "builder":{
+      "hostedZoneFilter": "my-subdomain"
+   }
+}
+```
 
 ## How to install jenkins
 
