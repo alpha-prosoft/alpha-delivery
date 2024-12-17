@@ -76,6 +76,16 @@ Becase deployent relies on naming comminf from AWS ControllTower you may need to
 }
 ```
 
+We should have only one vpc used so we should setup filter to get it base. Current filter is based on ControllTower 
+```
+{
+   "deployer":{
+      "vpc-filter": "aws-controltower-"
+   }
+}
+```
+
+
 ## Project name
 Dont forget to setup your project name (default is alpha)
 ```
