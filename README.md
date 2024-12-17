@@ -85,6 +85,14 @@ We should have only one vpc used so we should setup filter to get it base. Curre
 }
 ```
 
+You can have your system "internal" or "internet-facing" (Default) by configuring deployer scheme
+```
+{
+   "deployer":{
+      "scheme": "internet-facing"
+   }
+}
+```
 
 ## Project name
 Dont forget to setup your project name (default is alpha)
