@@ -76,6 +76,13 @@ Becase deployent relies on naming comminf from AWS ControllTower you may need to
 }
 ```
 
+## How to install base
+
+```
+location=$(mktemp -d) && cd $location && git clone https://github.com/alpha-prosoft/alpha-delivery.git && ./alpha-delivery/run.sh base
+
+
+```
 
 
 ## How to install jenkins
