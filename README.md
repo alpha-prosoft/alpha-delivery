@@ -76,6 +76,14 @@ Becase deployent relies on naming comminf from AWS ControllTower you may need to
 }
 ```
 
+## Project name
+Dont forget to setup your project name (default is alpha)
+```
+{
+   "project-name": "alpha"
+}
+```
+
 ## How to install base
 
 ```
