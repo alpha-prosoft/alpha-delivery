@@ -20,6 +20,7 @@ aws ssm get-parameter \
 if aws iam get-role --role-name $ROLE_NAME &> /dev/null; then
     echo "Role $ROLE_NAME already exists. Skipping creation."
 else
+    ROLE_ARN=$(aws iam get-role --role-name $ROLE_NAME --query 'Role.Arn' --output text)"
     TRUST_POLICY_DOCUMENT=$(cat <<EOF
 {
   "Version": "2012-10-17",
@@ -28,6 +29,13 @@ else
       "Effect": "Allow",
       "Principal": {
         "Service": "ec2.amazonaws.com" 
+      },
+      "Action": "sts:AssumeRole"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${ROLE_ARN}" 
       },
       "Action": "sts:AssumeRole"
     }
