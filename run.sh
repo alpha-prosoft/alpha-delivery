@@ -256,7 +256,9 @@ install $INSTANCE_ID "echo source /etc/bash_init >> /etc/bashrc"
 echo "Done config environment"
 
 echo "Cloning installation repo"
-install $INSTANCE_ID "git clone https://github.com/alpha-prosoft/alpha-${INSTALATION_TYPE}-svc.git /root/${INSTALATION_TYPE}"
+install $INSTANCE_ID "git clone https://github.com/alpha-prosoft/alpha-jenkins-svc.git /root/alpha-jenkins-svc"
+install $INSTANCE_ID "git clone https://github.com/alpha-prosoft/alpha-gerrit-svc.git /root/alpha-gerrit-svc"
+install $INSTANCE_ID "git clone https://github.com/alpha-prosoft/alpha-base-svc.git /root/alpha-base-svc"
 
 project_name="alpha*"
 if [[ ! -z "$(cat /tmp/config.json | jq -r '."project-name" // empty')" ]]; then 
@@ -266,5 +268,5 @@ fi
 echo "Done setting up config for project ${project_name}"
 echo "####################################"
 echo "Now you can connect with session manager to instance $INSTANCE_ID,"
-echo "go to /root/${INSTALATION_TYPE} and run ./build-and-deploy.sh"
+echo "go to /root/alpha-${INSTALATION_TYPE}-svc and run ./build-and-deploy.sh"
 echo "########### THANK YOU ##############"
