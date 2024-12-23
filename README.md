@@ -102,6 +102,21 @@ Dont forget to setup your project name (default is alpha)
 }
 ```
 
+## Deployed instance config
+```
+{
+   "deployer":{
+      "associatePublicIpAddress":"False",
+      "role":{
+         "additionalPolicies":[
+            "<< Policy ARN1 >>",
+            "<< Policy ARN2 >>"
+         ]
+      }
+   }
+}
+```
+
 ## How to install base
 
 ```
