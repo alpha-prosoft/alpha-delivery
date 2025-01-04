@@ -117,6 +117,49 @@ Dont forget to setup your project name (default is alpha)
 }
 ```
 
+## Authentication provider OIDC
+We have basic support for OIDC provider (i.e. PingFederate). 
+Provider needs to supoort clientId/clientSecret login for OIDC 
+and you need to configure redirectUrl for your client to ops-auth.$PublicHostedZoneName/oauth2/idpresponse
+
+You can also configure attribute mapping. We will assume follwing mapping (<Cognito>: <OIDC provider): 
+- email: email
+- name: display_name
+- profile: scope
+- username: sub
+
+Additional info: 
+- authorizedScopes default to "openid email profile"
+- attributeRequestMethod: defaults to "GET"
+
+
+```
+{
+   "deployer":{
+      "associatePublicIpAddress":"False",
+      "oidc":[
+         {
+            "providerName":"Ping Federate",
+            "attributeMapping":{
+               "email":"email",
+               "name":"display_name",
+               "profile":"scope",
+               "username":"sub"
+            },
+            "providerDetails":{
+               "clientId":"<<your client id>",
+               "clientSecret":"<<your client secret>",
+               "authorizedScopes":"openid email profile",
+               "oidcIssuer":"https://<<your oidc provider url>>",
+               "attributeRequestMethod":"GET"
+            }
+         }
+      ]
+   }
+}
+```
+
+
 ## How to install base
 
 ```
