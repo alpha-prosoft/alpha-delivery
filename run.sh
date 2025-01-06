@@ -20,7 +20,7 @@ aws ssm get-parameter \
 if aws iam get-role --role-name $ROLE_NAME &> /dev/null; then
     echo "Role $ROLE_NAME already exists. Skipping creation."
 else
-    ROLE_ARN=$(aws iam get-role --role-name $ROLE_NAME --query 'Role.Arn' --output text)"
+    ROLE_ARN="$(aws iam get-role --role-name $ROLE_NAME --query 'Role.Arn' --output text)"
     TRUST_POLICY_DOCUMENT_FILE=$(mktemp)
     cat <<EOF > $TRUST_POLICY_DOCUMENT_FILE
 {
@@ -49,7 +49,7 @@ EOF
 fi
 
 POLICY_NAME="deployer-policy"
-echo "Preparint policy ${POLICY_NAME}"
+echo "Preparing policy ${POLICY_NAME}"
 
 POLICY_DOCUMENT_FILE=$(mktemp)
 cat <<EOF > $POLICY_DOCUMENT_FILE
