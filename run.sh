@@ -168,17 +168,11 @@ cat <<EOF > $POLICY_DOCUMENT_FILE
 }
 EOF
 
-
-# Check if the policy already exists
-if aws iam get-policy --policy-arn "arn:aws:iam::${ACCOUNT_ID}:policy/$POLICY_NAME" 2>/dev/null; then
-echo "Preparint policy ${POLICY_NAME}"
-
-  echo "Policy '$POLICY_NAME' already exists. Updating policy document..."
-
-  # Update the policy document
+echo "Check if ${POLICY_NAME} the policy already exists"
+if aws iam get-policy --policy-arn "arn:aws:iam::${ACCOUNT_ID}:policy/$POLICY_NAME" 2>/dev/null; then   
+  echo "Policy '$POLICY_NAME' already exists. Updating policy document..."  
   aws iam put-policy --policy-arn "arn:aws:iam::${ACCOUNT_ID}:policy/$POLICY_NAME" \
       --policy-document "$(cat $POLICY_DOCUMENT_FILE)"
-
 else
   echo "Creating policy '$POLICY_NAME'..."
   aws iam create-policy --policy-name "$POLICY_NAME" \
