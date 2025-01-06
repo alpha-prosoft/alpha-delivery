@@ -177,12 +177,12 @@ echo "Preparint policy ${POLICY_NAME}"
 
   # Update the policy document
   aws iam put-policy --policy-arn "arn:aws:iam::${ACCOUNT_ID}:policy/$POLICY_NAME" \
-      --policy-document "$(cat POLICY_DOCUMENT)"
+      --policy-document "$(cat POLICY_DOCUMENT_FILE)"
 
 else
   echo "Creating policy '$POLICY_NAME'..."
   aws iam create-policy --policy-name "$POLICY_NAME" \
-      --policy-document "$(cat POLICY_DOCUMENT)"
+      --policy-document "$(cat POLICY_DOCUMENT_FILE)"
 fi
 
 echo "Attaching policy '$POLICY_NAME' to role '$ROLE_NAME'..."
