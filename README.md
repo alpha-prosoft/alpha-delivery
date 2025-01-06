@@ -136,25 +136,22 @@ Additional info:
 ```
 {
    "deployer":{
-      "associatePublicIpAddress":"False",
-      "oidc":[
-         {
-            "providerName":"Ping Federate",
-            "attributeMapping":{
-               "email":"email",
-               "name":"display_name",
-               "profile":"scope",
-               "username":"sub"
-            },
-            "providerDetails":{
-               "clientId":"<<your client id>",
-               "clientSecret":"<<your client secret>",
-               "authorizedScopes":"openid email profile",
-               "oidcIssuer":"https://<<your oidc provider url>>",
-               "attributeRequestMethod":"GET"
-            }
+      "oidc":{
+         "providerName":"Ping Federate",
+         "attributeMapping":{
+            "email":"email",
+            "name":"display_name",
+            "profile":"scope",
+            "username":"sub"
+         },
+         "providerDetails":{
+            "clientId":"<<your client id>",
+            "clientSecret":"<<your client secret>",
+            "authorizedScopes":"openid email profile",
+            "oidcIssuer":"https://<<your oidc provider url>>",
+            "attributeRequestMethod":"GET"
          }
-      ]
+      }
    }
 }
 ```
