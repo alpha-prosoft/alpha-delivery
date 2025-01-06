@@ -96,7 +96,8 @@ cat <<EOF > $POLICY_DOCUMENT_FILE
             "sqs:*",
             "ssm:*",
             "states:*",
-            "wafv2:*"
+            "wafv2:*",
+            "autoscaling:*"
          ],
          "Resource":"*",
          "Effect":"Allow",
