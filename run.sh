@@ -50,8 +50,8 @@ EOF
 fi
 
 POLICY_NAME="deployer-policy"
-
-read -r -d '' POLICY_DOCUMENT << EOF
+POLICY_DOCUMENT_FILE=$(mktemp)
+cat << EOF > $POLICY_DOCUMENT_FILE
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -166,18 +166,20 @@ read -r -d '' POLICY_DOCUMENT << EOF
 EOF
 
 ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+echo "Working on ${ACCOUNT_ID}"
+
 # Check if the policy already exists
 if aws iam get-policy --policy-arn "arn:aws:iam::${ACCOUNT_ID}:policy/$POLICY_NAME" 2>/dev/null; then
   echo "Policy '$POLICY_NAME' already exists. Updating policy document..."
 
   # Update the policy document
   aws iam put-policy --policy-arn "arn:aws:iam::${ACCOUNT_ID}:policy/$POLICY_NAME" \
-      --policy-document "$POLICY_DOCUMENT"
+      --policy-document "$(cat POLICY_DOCUMENT)"
 
 else
   echo "Creating policy '$POLICY_NAME'..."
   aws iam create-policy --policy-name "$POLICY_NAME" \
-      --policy-document "$POLICY_DOCUMENT"
+      --policy-document "$(cat POLICY_DOCUMENT)"
 fi
 
 echo "Attaching policy '$POLICY_NAME' to role '$ROLE_NAME'..."
