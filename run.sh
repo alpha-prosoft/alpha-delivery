@@ -17,8 +17,12 @@ aws ssm get-parameter \
        --query 'Parameter.Value' \
        --output text > /tmp/config.json || echo "No config"
 
-TRUST_POLICY_DOCUMENT_FILE=$(mktemp)
-cat <<EOF > $TRUST_POLICY_DOCUMENT_FILE
+if aws iam get-role --role-name $ROLE_NAME &> /dev/null; then
+    echo "Role $ROLE_NAME already exists. Skipping creation."
+else
+    ROLE_ARN=$(aws iam get-role --role-name $ROLE_NAME --query 'Role.Arn' --output text)"
+    TRUST_POLICY_DOCUMENT_FILE=$(mktemp)
+    cat <<EOF > $TRUST_POLICY_DOCUMENT_FILE
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -39,11 +43,6 @@ cat <<EOF > $TRUST_POLICY_DOCUMENT_FILE
   ]
 }
 EOF
-
-if aws iam get-role --role-name $ROLE_NAME &> /dev/null; then
-    echo "Role $ROLE_NAME already exists. Skipping creation."
-else
-    ROLE_ARN=$(aws iam get-role --role-name $ROLE_NAME --query 'Role.Arn' --output text)"
     echo "Creating role $ROLE_NAME..."
     aws iam create-role --role-name $ROLE_NAME --assume-role-policy-document "$(cat $TRUST_POLICY_DOCUMENT_FILE)"
 
