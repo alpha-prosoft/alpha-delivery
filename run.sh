@@ -49,10 +49,142 @@ EOF
 
 fi
 
+POLICY_NAME="deployer-policy"
 
-POLICY_ARN="arn:aws:iam::aws:policy/AdministratorAccess"
-echo "Attaching AdministratorAccess policy to $ROLE_NAME..."
-aws iam attach-role-policy --role-name $ROLE_NAME --policy-arn $POLICY_ARN
+read -r -d '' POLICY_DOCUMENT << EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "acm:*",
+        "aoss:*",
+        "apigateway:*",
+        "backup-storage:*"
+        "backup:*",
+        "batch:*",
+        "cloudformation:*",
+        "cloudfront:*",
+        "cloudtrail:*",
+        "cloudwatch:*",
+        "cognito-identity:*",
+        "cognito-idp:*",
+        "dynamodb:*",
+        "ec2:*",
+        "ecr:*",
+        "ecs:*",
+        "elasticfilesystem:*",
+        "elasticloadbalancing:*",
+        "es:*",
+        "events:*",
+        "glue:*",
+        "kms:*",
+        "lambda:*",
+        "logs:*",
+        "rds:*",
+        "route53:*",
+        "rum:*",
+        "s3:*",
+        "scheduler:*",
+        "schemas:*",
+        "secretsmanager:*",
+        "sns:*",
+        "sqs:*",
+        "ssm:*",
+        "states:*",
+        "wafv2:*",
+      ],
+      "Resource": "*",
+      "Effect": "Allow",
+      "Sid": "Services"
+    },
+    {
+      "Action": [
+        "iam:AddRoleToInstanceProfile",
+        "iam:AttachRolePolicy",
+        "iam:CreateInstanceProfile",
+        "iam:CreatePolicy",
+        "iam:CreatePolicyVersion",
+        "iam:CreateRole",
+        "iam:DeleteInstanceProfile",
+        "iam:DeletePolicy",
+        "iam:DeletePolicyVersion",
+        "iam:DeleteRole",
+        "iam:DeleteRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:GetPolicy",
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListInstanceProfilesForRole",
+        "iam:ListPolicies",
+        "iam:ListPolicyTags",
+        "iam:ListPolicyVersions",
+        "iam:ListRoleTags",
+        "iam:PassRole",
+        "iam:PutRolePolicy",
+        "iam:RemoveRoleFromInstanceProfile",
+        "iam:TagPolicy",
+        "iam:TagRole",
+        "iam:UntagPolicy",
+        "iam:UntagRole",
+        "iam:UpdateAssumeRolePolicy"
+      ],
+      "Resource": [
+        "arn:aws:iam::${ACCOUNT_ID}:role/*",
+        "arn:aws:iam::${ACCOUNT_ID}:policy/*",
+        "arn:aws:iam::${ACCOUNT_ID}:instance-profile/*"
+      ],
+      "Effect": "Allow",
+      "Sid": "IAM"
+    },
+    {
+      "Action": [
+        "iam:GetServiceLinkedRoleDeletionStatus",
+        "iam:CreateServiceLinkedRole",
+        "iam:DeleteServiceLinkedRole"
+      ],
+      "Resource": [
+        "arn:aws:iam::${ACCOUNT_ID}:role/*"
+      ],
+      "Effect": "Allow",
+      "Sid": "ESServiceLinkedRole"
+    },
+    {
+      "Action": [
+        "iam:PassRole"
+      ],
+      "Resource": [
+        "arn:aws:iam::${ACCOUNT_ID}:role/*"
+      ],
+      "Effect": "Allow",
+      "Sid": "ServicePassRole"
+    }
+  ]
+}
+
+EOF
+
+ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+# Check if the policy already exists
+if aws iam get-policy --policy-arn "arn:aws:iam::${ACCOUNT_ID}:policy/$POLICY_NAME" 2>/dev/null; then
+  echo "Policy '$POLICY_NAME' already exists. Updating policy document..."
+
+  # Update the policy document
+  aws iam put-policy --policy-arn "arn:aws:iam::${ACCOUNT_ID}:policy/$POLICY_NAME" \
+      --policy-document "$POLICY_DOCUMENT"
+
+else
+  echo "Creating policy '$POLICY_NAME'..."
+  aws iam create-policy --policy-name "$POLICY_NAME" \
+      --policy-document "$POLICY_DOCUMENT"
+fi
+
+echo "Attaching policy '$POLICY_NAME' to role '$ROLE_NAME'..."
+aws iam attach-role-policy --role-name "$ROLE_NAME" \
+    --policy-arn "arn:aws:iam::${ACCOUNT_ID}:policy/$POLICY_NAME"
+echo "Done setting up delovery role"
+
 
 POLICY_ARN="arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 echo "Attaching SSM policy to $ROLE_NAME..."
