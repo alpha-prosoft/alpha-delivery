@@ -51,7 +51,7 @@ fi
 
 POLICY_NAME="deployer-policy"
 POLICY_DOCUMENT_FILE=$(mktemp)
-cat << EOF > $POLICY_DOCUMENT_FILE
+cat <<EOF > $POLICY_DOCUMENT_FILE
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -162,7 +162,6 @@ cat << EOF > $POLICY_DOCUMENT_FILE
     }
   ]
 }
-
 EOF
 
 ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
