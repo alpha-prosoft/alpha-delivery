@@ -48,6 +48,9 @@ EOF
 
 fi
 
+ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+echo "Working on ${ACCOUNT_ID}"
+
 POLICY_NAME="deployer-policy"
 echo "Preparing policy ${POLICY_NAME}"
 
@@ -165,8 +168,6 @@ cat <<EOF > $POLICY_DOCUMENT_FILE
 }
 EOF
 
-ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
-echo "Working on ${ACCOUNT_ID}"
 
 # Check if the policy already exists
 if aws iam get-policy --policy-arn "arn:aws:iam::${ACCOUNT_ID}:policy/$POLICY_NAME" 2>/dev/null; then
