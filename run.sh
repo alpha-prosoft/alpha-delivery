@@ -125,6 +125,7 @@ cat <<EOF > $POLICY_DOCUMENT_FILE
             "iam:ListPolicyTags",
             "iam:ListPolicyVersions",
             "iam:ListRoleTags",
+            "iam:GetInstanceProfile",
             "iam:PassRole",
             "iam:PutRolePolicy",
             "iam:RemoveRoleFromInstanceProfile",
