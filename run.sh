@@ -17,6 +17,10 @@ aws ssm get-parameter \
        --query 'Parameter.Value' \
        --output text > /tmp/config.json || echo "No config"
 
+ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+echo "Working on ${ACCOUNT_ID}"
+
+
 if aws iam get-role --role-name $ROLE_NAME &> /dev/null; then
     echo "Role $ROLE_NAME already exists. Skipping creation."
 else
@@ -39,6 +43,13 @@ else
         "AWS": "${ROLE_ARN}" 
       },
       "Action": "sts:AssumeRole"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:sts::${ACCOUNT_ID}:role/DeliveryRole" 
+      },
+      "Action": "sts:AssumeRole"
     }
   ]
 }
@@ -48,8 +59,6 @@ EOF
 
 fi
 
-ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
-echo "Working on ${ACCOUNT_ID}"
 
 POLICY_NAME="deployer-policy"
 echo "Preparing policy ${POLICY_NAME}"
